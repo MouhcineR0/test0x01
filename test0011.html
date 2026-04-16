@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EXPLORER — Morocco Travel App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --color-bg: #0a0a0a;
+            --color-accent: #ff3d00;
+            --color-secondary: #00d9ff;
+            --color-warm: #ffb800;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--color-bg);
+            color: white;
+            overflow-x: hidden;
+            cursor: none;
+        }
+
+        .font-display {
+            font-family: 'Syne', sans-serif;
+        }
+
+        /* Custom Cursor */
+        .cursor {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--color-accent);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            mix-blend-mode: difference;
+            transition: transform 0.2s ease, width 0.2s ease, height 0.2s ease;
+        }
+
+        .cursor-follower {
+            width: 8px;
+            height: 8px;
+            background: var(--color-accent);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9998;
+            mix-blend-mode: difference;
+        }
+
+        .cursor.hover {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 61, 0, 0.1);
+        }
+
+        /* Noise Texture */
+        .noise {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9990;
+            opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        /* Marquee */
+        .marquee-container {
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .marquee-content {
+            display: inline-block;
+            animation: marquee 20s linear infinite;
+        }
+
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* Glitch Effect */
+        .glitch {
+            position: relative;
+        }
+
+        .glitch::before,
+        .glitch::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .glitch::before {
+            animation: glitch-1 2s infinite;
+            color: var(--color-secondary);
+            z-index: -1;
+        }
+
+        .glitch::after {
+            animation: glitch-2 2s infinite;
+            color: var(--color-accent);
+            z-index: -2;
+        }
+
+        @keyframes glitch-1 {
+            0%, 100% { clip-path: inset(0 0 0 0); transform: translate(0); }
+            20% { clip-path: inset(20% 0 30% 0); transform: translate(-2px, 2px); }
+            40% { clip-path: inset(50% 0 20% 0); transform: translate(2px, -2px); }
+            60% { clip-path: inset(10% 0 60% 0); transform: translate(-2px, 0); }
+            80% { clip-path: inset(80% 0 5% 0); transform: translate(2px, 2px); }
+        }
+
+        @keyframes glitch-2 {
+            0%, 100% { clip-path: inset(0 0 0 0); transform: translate(0); }
+            20% { clip-path: inset(60% 0 10% 0); transform: translate(2px, -2px); }
+            40% { clip-path: inset(30% 0 40% 0); transform: translate(-2px, 2px); }
+            60% { clip-path: inset(10% 0 70% 0); transform: translate(2px, 0); }
+            80% { clip-path: inset(40% 0 30% 0); transform: translate(-2px, -2px); }
+        }
+
+        /* Text Scramble */
+        .scramble-text {
+            display: inline-block;
+        }
+
+        /* Asymmetric Grid */
+        .asymmetric-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1.5fr;
+            grid-template-rows: auto auto;
+            gap: 2rem;
+        }
+
+        .grid-item-1 { grid-column: 1 / 2; grid-row: 1 / 3; }
+        .grid-item-2 { grid-column: 2 / 4; grid-row: 1 / 2; }
+        .grid-item-3 { grid-column: 2 / 3; grid-row: 2 / 3; }
+        .grid-item-4 { grid-column: 3 / 4; grid-row: 2 / 3; }
+
+        /* Clip Path Reveal */
+        .clip-reveal {
+            clip-path: polygon(0 0, 100% 0, 100% 0, 0 0);
+            transition: clip-path 1s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+
+        .clip-reveal.revealed {
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+        }
+
+        /* Hover Image Reveal */
+        .hover-reveal {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hover-reveal img {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 300px;
+            height: 300px;
+            object-fit: cover;
+            pointer-events: none;
+            transition: transform 0.5s cubic-bezier(0.77, 0, 0.175, 1);
+            z-index: 10;
+            border-radius: 50%;
+        }
+
+        .hover-reveal:hover img {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        /* Sticky Elements */
+        .sticky-text {
+            position: sticky;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        /* Horizontal Scroll Section */
+        .horizontal-scroll {
+            display: flex;
+            gap: 4rem;
+            padding: 0 4rem;
+        }
+
+        /* Feature Cards */
+        .feature-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.4s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+
+        .feature-card:hover {
+            background: rgba(255, 61, 0, 0.05);
+            border-color: var(--color-accent);
+            transform: translateY(-10px) rotate(-1deg);
+        }
+
+        /* Typography Scale */
+        .text-massive {
+            font-size: clamp(4rem, 15vw, 12rem);
+            line-height: 0.85;
+            letter-spacing: -0.04em;
+        }
+
+        .text-huge {
+            font-size: clamp(2rem, 8vw, 6rem);
+            line-height: 0.9;
+            letter-spacing: -0.02em;
+        }
+
+        /* Blend Modes */
+        .blend-difference {
+            mix-blend-mode: difference;
+        }
+
+        .blend-exclusion {
+            mix-blend-mode: exclusion;
+        }
+
+        /* Magnetic Button */
+        .magnetic-btn {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem 3rem;
+            background: transparent;
+            border: 2px solid var(--color-accent);
+            color: var(--color-accent);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .magnetic-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--color-accent);
+            transition: left 0.3s ease;
+            z-index: -1;
+        }
+
+        .magnetic-btn:hover {
+            color: white;
+        }
+
+        .magnetic-btn:hover::before {
+            left: 0;
+        }
+
+        /* Image Treatment */
+        .duotone {
+            filter: grayscale(100%) contrast(1.2);
+            position: relative;
+        }
+
+        .duotone::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(45deg, var(--color-accent), var(--color-secondary));
+            mix-blend-mode: overlay;
+            opacity: 0.6;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--color-bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--color-accent);
+            border-radius: 4px;
+        }
+
+        /* Selection */
+        ::selection {
+            background: var(--color-accent);
+            color: white;
+        }
+
+        /* Mobile Cursor Disable */
+        @media (pointer: coarse) {
+            body { cursor: auto; }
+            .cursor, .cursor-follower { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Noise Overlay -->
+    <div class="noise"></div>
+
+    <!-- Custom Cursor -->
+    <div class="cursor"></div>
+    <div class="cursor-follower"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 w-full z-50 mix-blend-difference px-6 py-6">
+        <div class="flex justify-between items-center">
+            <a href="#" class="font-display text-2xl font-bold tracking-tighter hover-trigger" data-cursor="hover">
+                EXPLORER
+            </a>
+            <div class="hidden md:flex gap-8 text-sm font-medium tracking-widest uppercase">
+                <a href="#work" class="hover:text-[#ff3d00] transition-colors hover-trigger" data-cursor="hover">Work</a>
+                <a href="#features" class="hover:text-[#ff3d00] transition-colors hover-trigger" data-cursor="hover">Features</a>
+                <a href="#about" class="hover:text-[#ff3d00] transition-colors hover-trigger" data-cursor="hover">About</a>
+                <a href="#contact" class="hover:text-[#ff3d00] transition-colors hover-trigger" data-cursor="hover">Contact</a>
+            </div>
+            <button class="md:hidden hover-trigger" data-cursor="hover">
+                <i data-lucide="menu" class="w-6 h-6"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="min-h-screen flex flex-col justify-center relative overflow-hidden px-6 pt-20">
+        <!-- Background Elements -->
+        <div class="absolute inset-0 z-0">
+            <div class="absolute top-20 right-10 w-96 h-96 bg-[#ff3d00] rounded-full filter blur-[150px] opacity-20"></div>
+            <div class="absolute bottom-20 left-10 w-72 h-72 bg-[#00d9ff] rounded-full filter blur-[120px] opacity-20"></div>
+        </div>
+
+        <div class="relative z-10 max-w-[1800px] mx-auto w-full">
+            <!-- Main Title -->
+            <div class="mb-8">
+                <h1 class="font-display text-massive font-bold leading-none">
+                    <span class="block overflow-hidden">
+                        <span class="hero-text inline-block">DISCOVER</span>
+                    </span>
+                    <span class="block overflow-hidden">
+                        <span class="hero-text inline-block text-[#ff3d00]">MOROCCO</span>
+                    </span>
+                </h1>
+            </div>
+
+            <!-- Subtitle with Glitch -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 mt-12">
+                <div class="max-w-md">
+                    <p class="text-xl md:text-2xl text-gray-400 leading-relaxed">
+                        A travel application that breaks conventions. 
+                        <span class="text-white font-medium">Curated experiences.</span> 
+                        Local guides. Zero compromises.
+                    </p>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm text-gray-500 uppercase tracking-widest mb-2">Version 2.0</p>
+                    <p class="text-6xl font-display font-bold text-[#00d9ff]">2024</p>
+                </div>
+            </div>
+
+            <!-- Floating Stats -->
+            <div class="absolute bottom-10 left-6 right-6 flex justify-between items-end">
+                <div class="flex gap-12">
+                    <div>
+                        <p class="text-5xl font-display font-bold">500+</p>
+                        <p class="text-xs uppercase tracking-widest text-gray-500 mt-1">Experiences</p>
+                    </div>
+                    <div>
+                        <p class="text-5xl font-display font-bold">200+</p>
+                        <p class="text-xs uppercase tracking-widest text-gray-500 mt-1">Local Guides</p>
+                    </div>
+                </div>
+                <div class="hidden md:block">
+                    <div class="magnetic-btn hover-trigger" data-cursor="hover">
+                        View Case Study
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scroll Indicator -->
+        <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2">
+            <span class="text-xs uppercase tracking-widest text-gray-500">Scroll</span>
+            <div class="w-px h-12 bg-gradient-to-b from-[#ff3d00] to-transparent"></div>
+        </div>
+    </section>
+
+    <!-- Marquee Section -->
+    <section class="py-8 border-y border-white/10 bg-[#ff3d00]">
+        <div class="marquee-container">
+            <div class="marquee-content font-display text-6xl md:text-8xl font-bold text-black uppercase tracking-tighter">
+                <span class="mx-8">Travel Different</span>
+                <span class="mx-8">•</span>
+                <span class="mx-8">Explore More</span>
+                <span class="mx-8">•</span>
+                <span class="mx-8">Book Smarter</span>
+                <span class="mx-8">•</span>
+                <span class="mx-8">Travel Different</span>
+                <span class="mx-8">•</span>
+                <span class="mx-8">Explore More</span>
+                <span class="mx-8">•</span>
+                <span class="mx-8">Book Smarter</span>
+                <span class="mx-8">•</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Work Section -->
+    <section id="work" class="py-32 px-6 relative">
+        <div class="max-w-[1800px] mx-auto">
+            <!-- Section Header -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-20 gap-8">
+                <div>
+                    <p class="text-[#ff3d00] text-sm uppercase tracking-widest mb-4">Selected Work</p>
+                    <h2 class="font-display text-huge font-bold">FEATURED<br>EXPERIENCES</h2>
+                </div>
+                <p class="max-w-sm text-gray-400 text-lg">
+                    Breaking the traditional travel app mold with experimental UI and raw, authentic content.
+                </p>
+            </div>
+
+            <!-- Asymmetric Grid -->
+            <div class="asymmetric-grid">
+                <!-- Large Item -->
+                <div class="grid-item-1 clip-reveal hover-trigger" data-cursor="hover">
+                    <div class="relative h-full min-h-[600px] group">
+                        <img src="https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=800&h=1000&fit=crop" 
+                             alt="Desert Experience" 
+                             class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                        <div class="absolute bottom-0 left-0 p-8">
+                            <p class="text-[#ff3d00] text-sm uppercase tracking-widest mb-2">01 — Desert</p>
+                            <h3 class="font-display text-4xl font-bold mb-2">Sahara Nights</h3>
+                            <p class="text-gray-300">Luxury camp experiences in the heart of the desert</p>
+                        </div>
+                        <div class="absolute top-4 right-4 w-16 h-16 rounded-full border border-white/30 flex items-center justify-center group-hover:bg-[#ff3d00] group-hover:border-[#ff3d00] transition-all">
+                            <i data-lucide="arrow-up-right" class="w-6 h-6"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Wide Item -->
+                <div class="grid-item-2 clip-reveal hover-trigger" data-cursor="hover" style="transition-delay: 0.1s">
+                    <div class="relative h-80 group overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1549144511-f099e773c147?w=1200&h=600&fit=crop" 
+                             alt="Blue City" 
+                             class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-110">
+                        <div class="absolute inset-0 bg-gradient-to-r from-black/80 to-transparent"></div>
+                        <div class="absolute bottom-0 left-0 p-8">
+                            <p class="text-[#00d9ff] text-sm uppercase tracking-widest mb-2">02 — Urban</p>
+                            <h3 class="font-display text-3xl font-bold">Chefchaouen Blues</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Small Items -->
+                <div class="grid-item-3 clip-reveal hover-trigger" data-cursor="hover" style="transition-delay: 0.2s">
+                    <div class="relative h-full min-h-[300px] group overflow-hidden bg-[#111]">
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <i data-lucide="compass" class="w-20 h-20 text-[#ff3d00] opacity-50 group-hover:opacity-100 group-hover:rotate-45 transition-all duration-500"></i>
+                        </div>
+                        <div class="absolute bottom-0 left-0 p-6">
+                            <p class="text-xs uppercase tracking-widest text-gray-500 mb-1">Navigation</p>
+                            <p class="font-display text-xl font-bold">Smart Discovery</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid-item-4 clip-reveal hover-trigger" data-cursor="hover" style="transition-delay: 0.3s">
+                    <div class="relative h-full min-h-[300px] group">
+                        <img src="https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?w=600&h=400&fit=crop" 
+                             alt="Mountains" 
+                             class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                        <div class="absolute bottom-0 left-0 p-6">
+                            <p class="text-[#ffb800] text-sm uppercase tracking-widest mb-1">03 — Nature</p>
+                            <p class="font-display text-xl font-bold">Atlas Mountains</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section with Horizontal Scroll -->
+    <section id="features" class="py-32 relative overflow-hidden">
+        <div class="px-6 mb-16">
+            <div class="max-w-[1800px] mx-auto">
+                <p class="text-[#00d9ff] text-sm uppercase tracking-widest mb-4">Capabilities</p>
+                <h2 class="font-display text-huge font-bold">APP FEATURES</h2>
+            </div>
+        </div>
+
+        <div class="features-wrapper overflow-x-auto pb-8 hide-scrollbar">
+            <div class="horizontal-scroll" style="width: max-content;">
+                <!-- Feature 1 -->
+                <div class="feature-card w-[400px] p-8 hover-trigger" data-cursor="hover">
+                    <div class="w-16 h-16 rounded-full border border-[#ff3d00] flex items-center justify-center mb-6">
+                        <i data-lucide="map-pin" class="w-8 h-8 text-[#ff3d00]"></i>
+                    </div>
+                    <h3 class="font-display text-2xl font-bold mb-4">Curated Experiences</h3>
+                    <p class="text-gray-400 mb-6">Handpicked stays and activities across Morocco, from riads in Marrakech to desert camps in Merzouga.</p>
+                    <div class="flex gap-2">
+                        <span class="px-3 py-1 bg-white/5 text-xs uppercase tracking-wider">500+ Stays</span>
+                        <span class="px-3 py-1 bg-white/5 text-xs uppercase tracking-wider">Verified</span>
+                    </div>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="feature-card w-[400px] p-8 hover-trigger" data-cursor="hover">
+                    <div class="w-16 h-16 rounded-full border border-[#00d9ff] flex items-center justify-center mb-6">
+                        <i data-lucide="users" class="w-8 h-8 text-[#00d9ff]"></i>
+                    </div>
+                    <h3 class="font-display text-2xl font-bold mb-4">Local Guides</h3>
+                    <p class="text-gray-400 mb-6">Connect with verified local guides who speak your language and share your interests.</p>
+                    <div class="flex gap-2">
+                        <span class="px-3 py-1 bg-white/5 text-xs uppercase tracking-wider">200+ Guides</span>
+                        <span class="px-3 py-1 bg-white/5 text-xs uppercase tracking-wider">Multilingual</span>
+                    </div>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="feature-card w-[400px] p-8 hover-trigger" data-cursor="hover">
+                    <div class="w-16 h-16 rounded-full border border-[#ffb800] flex items-center justify-center mb-6">
+                        <i data-lucide="heart" class="w-8 h-8 text-[#ffb800]"></i>
+                    </div>
+                    <h3 class="font-display text-2xl font-bold mb-4">Smart Wishlist</h3>
+                    <p class="text-gray-400 mb-6">Save favorites and sync across devices. Never lose track of your dream trips.</p>
+                    <div class="flex gap-2">
+                        <span class="px-3 py-1 bg-white/5 text-xs uppercase tracking-wider">Cloud Sync</span>
+                        <span class="px-3 py-1 bg-white/5 text-xs uppercase tracking-wider">Offline</span>
+                    </div>
+                </div>
+
+                <!-- Feature 4 -->
+                <div class="feature-card w-[400px] p-8 hover-trigger" data-cursor="hover">
+                    <div class="w-16 h-16 rounded-full border border-[#ff3d00] flex items-center justify-center mb-6">
+                        <i data-lucide="calendar-check" class="w-8 h-8 text-[#ff3d00]"></i>
+                    </div>
+                    <h3 class="font-display text-2xl font-bold mb-4">Instant Booking</h3>
+                    <p class="text-gray-400 mb-6">Seamless reservations with instant confirmation. Manage trips with our itinerary tracker.</p>
+                    <div class="flex gap-2">
+                        <span class="px-3 py-1 bg-white/5 text-xs uppercase tracking-wider">Real-time</span>
+                        <span class="px-3 py-1 bg-white/5 text-xs uppercase tracking-wider">Secure</span>
+                    </div>
+                </div>
+
+                <!-- Feature 5 -->
+                <div class="feature-card w-[400px] p-8 hover-trigger" data-cursor="hover">
+                    <div class="w-16 h-16 rounded-full border border-[#00d9ff] flex items-center justify-center mb-6">
+                        <i data-lucide="search" class="w-8 h-8 text-[#00d9ff]"></i>
+                    </div>
+                    <h3 class="font-display text-2xl font-bold mb-4">Smart Filters</h3>
+                    <p class="text-gray-400 mb-6">Filter by category, location, price range. Find exactly what you're looking for.</p>
+                    <div class="flex gap-2">
+                        <span class="px-3 py-1 bg-white/5 text-xs uppercase tracking-wider">Advanced</span>
+                        <span class="px-3 py-1 bg-white/5 text-xs uppercase tracking-wider">Fast</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive List Section -->
+    <section id="about" class="py-32 px-6">
+        <div class="max-w-[1800px] mx-auto">
+            <div class="grid md:grid-cols-2 gap-16">
+                <div class="sticky-text">
+                    <p class="text-[#ff3d00] text-sm uppercase tracking-widest mb-4">The Platform</p>
+                    <h2 class="font-display text-6xl md:text-7xl font-bold mb-8">BUILT<br>DIFFERENT</h2>
+                    <p class="text-gray-400 text-lg leading-relaxed">
+                        We rejected the cookie-cutter travel app formula. Every pixel, every interaction, every feature was crafted to deliver an experience as unique as Morocco itself.
+                    </p>
+                </div>
+
+                <div class="space-y-0">
+                    <div class="hover-reveal border-t border-white/10 py-8 group hover-trigger" data-cursor="hover">
+                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop" alt="User">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h3 class="font-display text-3xl font-bold mb-2 group-hover:text-[#ff3d00] transition-colors">User First</h3>
+                                <p class="text-gray-500">Intuitive design that disappears</p>
+                            </div>
+                            <span class="text-6xl font-display font-bold text-white/5 group-hover:text-[#ff3d00]/20 transition-colors">01</span>
+                        </div>
+                    </div>
+
+                    <div class="hover-reveal border-t border-white/10 py-8 group hover-trigger" data-cursor="hover">
+                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop" alt="Local">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h3 class="font-display text-3xl font-bold mb-2 group-hover:text-[#00d9ff] transition-colors">Local Authentic</h3>
+                                <p class="text-gray-500">Real connections, real experiences</p>
+                            </div>
+                            <span class="text-6xl font-display font-bold text-white/5 group-hover:text-[#00d9ff]/20 transition-colors">02</span>
+                        </div>
+                    </div>
+
+                    <div class="hover-reveal border-t border-white/10 py-8 group hover-trigger" data-cursor="hover">
+                        <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop" alt="Tech">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h3 class="font-display text-3xl font-bold mb-2 group-hover:text-[#ffb800] transition-colors">Tech Forward</h3>
+                                <p class="text-gray-500">Cutting-edge without the complexity</p>
+                            </div>
+                            <span class="text-6xl font-display font-bold text-white/5 group-hover:text-[#ffb800]/20 transition-colors">03</span>
+                        </div>
+                    </div>
+
+                    <div class="hover-reveal border-t border-b border-white/10 py-8 group hover-trigger" data-cursor="hover">
+                        <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop" alt="Design">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h3 class="font-display text-3xl font-bold mb-2 group-hover:text-[#ff3d00] transition-colors">Design Obsessed</h3>
+                                <p class="text-gray-500">Every detail matters</p>
+                            </div>
+                            <span class="text-6xl font-display font-bold text-white/5 group-hover:text-[#ff3d00]/20 transition-colors">04</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Visual Break -->
+    <section class="py-20 relative overflow-hidden">
+        <div class="absolute inset-0 flex items-center justify-center">
+            <h2 class="font-display text-[20vw] font-bold text-white/5 whitespace-nowrap">
+                EXPLORER EXPLORER EXPLORER
+            </h2>
+        </div>
+        <div class="relative z-10 max-w-4xl mx-auto text-center px-6">
+            <p class="text-2xl md:text-4xl font-display font-medium leading-tight">
+                "The only travel app that understands Morocco isn't just a destination—it's an <span class="text-[#ff3d00]">experience</span>."
+            </p>
+            <p class="mt-8 text-gray-500">— Travel + Leisure</p>
+        </div>
+    </section>
+
+    <!-- Tech Stack Section -->
+    <section class="py-32 px-6 border-t border-white/10">
+        <div class="max-w-[1800px] mx-auto">
+            <div class="grid md:grid-cols-3 gap-8">
+                <div>
+                    <p class="text-[#00d9ff] text-sm uppercase tracking-widest mb-4">Frontend</p>
+                    <ul class="space-y-2 text-gray-400">
+                        <li class="flex items-center gap-2">
+                            <span class="w-1.5 h-1.5 bg-[#00d9ff] rounded-full"></span>
+                            React Native / Expo
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="w-1.5 h-1.5 bg-[#00d9ff] rounded-full"></span>
+                            TypeScript
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="w-1.5 h-1.5 bg-[#00d9ff] rounded-full"></span>
+                            Tailwind CSS
+                        </li>
+                    </ul>
+                </div>
+                <div>
+                    <p class="text-[#ff3d00] text-sm uppercase tracking-widest mb-4">Backend</p>
+                    <ul class="space-y-2 text-gray-400">
+                        <li class="flex items-center gap-2">
+                            <span class="w-1.5 h-1.5 bg-[#ff3d00] rounded-full"></span>
+                            Node.js / Express
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="w-1.5 h-1.5 bg-[#ff3d00] rounded-full"></span>
+                            Prisma ORM
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="w-1.5 h-1.5 bg-[#ff3d00] rounded-full"></span>
+                            PostgreSQL
+                        </li>
+                    </ul>
+                </div>
+                <div>
+                    <p class="text-[#ffb800] text-sm uppercase tracking-widest mb-4">Features</p>
+                    <ul class="space-y-2 text-gray-400">
+                        <li class="flex items-center gap-2">
+                            <span class="w-1.5 h-1.5 bg-[#ffb800] rounded-full"></span>
+                            JWT Authentication
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="w-1.5 h-1.5 bg-[#ffb800] rounded-full"></span>
+                            Real-time Booking
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="w-1.5 h-1.5 bg-[#ffb800] rounded-full"></span>
+                            Cloud Sync
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact / CTA Section -->
+    <section id="contact" class="py-32 px-6 relative overflow-hidden">
+        <div class="absolute inset-0 bg-[#ff3d00]"></div>
+        <div class="absolute inset-0 opacity-10">
+            <div class="absolute inset-0" style="background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(0,0,0,.5) 35px, rgba(0,0,0,.5) 70px);"></div>
+        </div>
+
+        <div class="relative z-10 max-w-[1800px] mx-auto text-center">
+            <h2 class="font-display text-6xl md:text-9xl font-bold text-black mb-8">
+                GET THE APP
+            </h2>
+            <p class="text-black/70 text-xl max-w-2xl mx-auto mb-12">
+                Available on iOS and Android. Start your Moroccan adventure today.
+            </p>
+
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button class="magnetic-btn border-black text-black hover-trigger" data-cursor="hover" style="border-color: black; color: black;">
+                    <i data-lucide="apple" class="w-5 h-5 mr-2"></i>
+                    App Store
+                </button>
+                <button class="magnetic-btn border-black text-black hover-trigger" data-cursor="hover" style="border-color: black; color: black;">
+                    <i data-lucide="play" class="w-5 h-5 mr-2"></i>
+                    Google Play
+                </button>
+            </div>
+
+            <div class="mt-20 pt-8 border-t border-black/20 flex flex-col md:flex-row justify-between items-center gap-4 text-black/60 text-sm">
+                <p>© 2024 Explorer. All rights reserved.</p>
+                <div class="flex gap-6">
+                    <a href="#" class="hover:text-black transition-colors">Instagram</a>
+                    <a href="#" class="hover:text-black transition-colors">Twitter</a>
+                    <a href="#" class="hover:text-black transition-colors">LinkedIn</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Custom Cursor
+        const cursor = document.querySelector('.cursor');
+        const follower = document.querySelector('.cursor-follower');
+        let mouseX = 0, mouseY = 0;
+        let cursorX = 0, cursorY = 0;
+        let followerX = 0, followerY = 0;
+
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        function animateCursor() {
+            cursorX += (mouseX - cursorX) * 0.2;
+            cursorY += (mouseY - cursorY) * 0.2;
+            followerX += (mouseX - followerX) * 0.1;
+            followerY += (mouseY - followerY) * 0.1;
+
+            cursor.style.left = cursorX - 10 + 'px';
+            cursor.style.top = cursorY - 10 + 'px';
+            follower.style.left = followerX - 4 + 'px';
+            follower.style.top = followerY - 4 + 'px';
+
+            requestAnimationFrame(animateCursor);
+        }
+        animateCursor();
+
+        // Hover effects for cursor
+        document.querySelectorAll('.hover-trigger').forEach(trigger => {
+            trigger.addEventListener('mouseenter', () => {
+                cursor.classList.add('hover');
+            });
+            trigger.addEventListener('mouseleave', () => {
+                cursor.classList.remove('hover');
+            });
+        });
+
+        // GSAP Animations
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Hero text animation
+        gsap.from('.hero-text', {
+            y: 200,
+            opacity: 0,
+            duration: 1.2,
+            stagger: 0.2,
+            ease: 'power4.out'
+        });
+
+        // Clip reveal on scroll
+        const clipElements = document.querySelectorAll('.clip-reveal');
+        clipElements.forEach(el => {
+            ScrollTrigger.create({
+                trigger: el,
+                start: 'top 80%',
+                onEnter: () => el.classList.add('revealed')
+            });
+        });
+
+        // Parallax on scroll
+        gsap.to('.grid-item-1 img', {
+            yPercent: 20,
+            ease: 'none',
+            scrollTrigger: {
+                trigger: '.grid-item-1',
+                start: 'top bottom',
+                end: 'bottom top',
+                scrub: true
+            }
+        });
+
+        // Feature cards stagger
+        gsap.from('.feature-card', {
+            x: 100,
+            opacity: 0,
+            duration: 0.8,
+            stagger: 0.1,
+            ease: 'power3.out',
+            scrollTrigger: {
+                trigger: '#features',
+                start: 'top 70%'
+            }
+        });
+
+        // Magnetic button effect
+        document.querySelectorAll('.magnetic-btn').forEach(btn => {
+            btn.addEventListener('mousemove', (e) => {
+                const rect = btn.getBoundingClientRect();
+                const x = e.clientX - rect.left - rect.width / 2;
+                const y = e.clientY - rect.top - rect.height / 2;
+
+                gsap.to(btn, {
+                    x: x * 0.3,
+                    y: y * 0.3,
+                    duration: 0.3,
+                    ease: 'power2.out'
+                });
+            });
+
+            btn.addEventListener('mouseleave', () => {
+                gsap.to(btn, {
+                    x: 0,
+                    y: 0,
+                    duration: 0.3,
+                    ease: 'power2.out'
+                });
+            });
+        });
+
+        // Smooth scroll for navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    gsap.to(window, {
+                        duration: 1,
+                        scrollTo: { y: target, offsetY: 80 },
+                        ease: 'power3.inOut'
+                    });
+                }
+            });
+        });
+
+        // Text scramble effect on hover
+        class TextScramble {
+            constructor(el) {
+                this.el = el;
+                this.chars = '!<>-_\/[]{}—=+*^?#________';
+                this.update = this.update.bind(this);
+            }
+            setText(newText) {
+                const oldText = this.el.innerText;
+                const length = Math.max(oldText.length, newText.length);
+                const promise = new Promise((resolve) => this.resolve = resolve);
+                this.queue = [];
+                for (let i = 0; i < length; i++) {
+                    const from = oldText[i] || '';
+                    const to = newText[i] || '';
+                    const start = Math.floor(Math.random() * 40);
+                    const end = start + Math.floor(Math.random() * 40);
+                    this.queue.push({ from, to, start, end });
+                }
+                cancelAnimationFrame(this.frameRequest);
+                this.frame = 0;
+                this.update();
+                return promise;
+            }
+            update() {
+                let output = '';
+                let complete = 0;
+                for (let i = 0, n = this.queue.length; i < n; i++) {
+                    let { from, to, start, end, char } = this.queue[i];
+                    if (this.frame >= end) {
+                        complete++;
+                        output += to;
+                    } else if (this.frame >= start) {
+                        if (!char || Math.random() < 0.28) {
+                            char = this.randomChar();
+                            this.queue[i].char = char;
+                        }
+                        output += `<span class="text-[#ff3d00]">${char}</span>`;
+                    } else {
+                        output += from;
+                    }
+                }
+                this.el.innerHTML = output;
+                if (complete === this.queue.length) {
+                    this.resolve();
+                } else {
+                    this.frameRequest = requestAnimationFrame(this.update);
+                    this.frame++;
+                }
+            }
+            randomChar() {
+                return this.chars[Math.floor(Math.random() * this.chars.length)];
+            }
+        }
+
+        // Apply scramble to hero text on load
+        const phrases = ['DISCOVER', 'MOROCCO'];
+        const el = document.querySelector('.hero-text');
+        if (el) {
+            const fx = new TextScramble(el);
+            let counter = 0;
+            const next = () => {
+                fx.setText(phrases[counter]).then(() => {
+                    setTimeout(next, 3000);
+                });
+                counter = (counter + 1) % phrases.length;
+            };
+            // next();
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollToPlugin.min.js"></script>
+</body>
+</html>
